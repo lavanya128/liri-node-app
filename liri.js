@@ -2,18 +2,38 @@ var key = require('./keys.js');
 var fs = require('fs');
 var request = require('request');
 var Twitter = require('twitter');
-var spotify = require('node-spotify-api');
-
+var Spotify = require('node-spotify-api');
+var Twitter = require('twitter');
 
 console.log(key);
 var action = process.argv[2];
-var trackName = process.argv.splice(3).join(' ');
 
 console.log(action);
 
 if(action === 'do-what-it-says')
 {
-	console.log("nothing yet");
+	//console.log("nothing yet");
+	fs.readFile("random.txt", "utf8", function(err, data) {
+    		if (err) {
+      		return console.log(err);
+      	}
+      	console.log(data);
+      	
+	action = data;
+	console.log(action);
+	switchAction(action);
+
+	//var arrData = [];
+	var result = [];
+	result = data.split(","); 
+	console.log(result);
+	action = result[0];
+	trackName = result[1];
+	console.log(action);
+	console.log(trackName);
+	switchAction();
+
+	});
 }
 else
 {
@@ -25,7 +45,8 @@ function switchAction()
 	switch(action){
 		case "my-tweets": myTweets();
 							break;
-		case "spotify-this-song": myTrack(trackName);
+		case "spotify-this-song": var trackName = process.argv.splice(3).join(' ');
+		     						myTrack(trackName);
 									break;
 		case "movie-this": myMovie();
 							break;
@@ -37,12 +58,12 @@ function switchAction()
 function myTweets()
 {
 	var client = new Twitter({
-  this.consumer_key: key.consumer_key,
-  this.consumer_secret: key.consumer_secret,
-  this.access_token_key: key.access_token_key,
-  this.access_token_secret: key.access_token_secret
+  	consumer_key: key.tkey.consumer_key,
+ 	consumer_secret: key.tkey.consumer_secret,
+  	access_token_key: key.tkey.access_token_key,
+  	access_token_secret: key.tkey.access_token_secret
 });
-	console.log(this.consumer_key);
+	console.log(key.tkey);
 
 	var params = {screen_name: '@lavs_subramany'};
 	client.get('statuses/user_timeline', params, function(error, tweets, response) {
@@ -64,20 +85,20 @@ function myTweets()
 
 function myTrack(trackName)
 {
-
+    var newTrack
 	var spotify = new Spotify({
-		id:,
-		secret:
+		id: key.spotifyKey.id,
+		secret: key.spotifyKey.secret
 	});
 	if(!trackName)
 	{
-		var newTrack = 'The Sign';
+		newTrack = 'The Sign';
 	}
 	else
 	{
-		var newTrack = trackName;
+		newTrack = trackName;
 	}
-	Spotify.search({ type: 'track', query: newTrack}, function(err, data) {
+	spotify.search({ type: 'track', query: newTrack, limit: 10}, function(err, data) {
   if (err) {
     console.error('Something went wrong', err.message);
     return;
@@ -101,7 +122,7 @@ function myTrack(trackName)
      //console.log(index + ': ' + track.name + ' (' + track.popularity + ')');
  if(track.name.toLowerCase() === newTrack.toLowerCase())
    {
-    console.log(track.name);
+    //console.log(track.name);
     console.log("Artist: ", track.album.artists[0].name);
     console.log("Track Name: ", track.name);
     console.log("Album Name: ", track.album.name);
@@ -113,15 +134,16 @@ function myTrack(trackName)
 
 function myMovie()
 {
-	var movieName;
-	if(!process.argv[3])
+	//var movieName;
+	if(process.argv[3])
 	{
-		movieName = 'Mr.Nobody';
+		var movieName = process.argv.splice(3).join(' ');
 	}
 	else
 	{
-		movieName = process.argv.splice(3).join(" ");
+		var movieName = 'Mr.Nobody';
 	}
+	console.log(movieName);
 	var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=40e9cece";
 
 // This line is just to help us debug against the actual URL.
@@ -135,7 +157,7 @@ request(queryUrl, function(error, response, body) {
     // Parse the body of the site and recover just the imdbRating
     // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
     console.log("Release Year: " + JSON.parse(body).Year);
-    console.log("Your movie: " + JSON.parse(body).Title);
+    console.log("Movie: " + JSON.parse(body).Title);
     console.log("The IMDB rating: " + JSON.parse(body).imdbRating);
   //console.log("The Rotten Tomatoes rating: " + JSON.parse(body).);
     console.log("The production country: " + JSON.parse(body).Country);
